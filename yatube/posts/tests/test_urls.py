@@ -70,7 +70,7 @@ class StaticURLTests(TestCase):
     def test_post_edit_url_redirect_for_anonymous(self):
         response = self.guest_client.get(f'/posts/{self.post.id}/edit/')
         self.assertEqual(response.status_code, 302)
-    
+
     def test_follow_redirect_for_anonymous(self):
         response = self.guest_client.get('/follow/')
         self.assertEqual(response.status_code, 302)

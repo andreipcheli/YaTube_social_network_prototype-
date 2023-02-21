@@ -253,7 +253,7 @@ class Views_Tests(TestCase):
 
     def test_follow_page_shows_correct_context(self):
         Follow.objects.create(
-            author = self.author,
+            author=self.author,
             user=self.user
         )
         response = self.authorized_client.get(reverse('posts:follow_index'))
@@ -264,18 +264,24 @@ class Views_Tests(TestCase):
         self.assertEqual(first_post.text, self.post.text)
 
     def test_func_follow_works_correct(self):
-        response_before = self.authorized_client.get(reverse('posts:follow_index'))
-        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.author.username}))
-        response_after = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertNotEqual(response_before.content, response_after.content)
-        
-    def test_func_unfollow_works_correct(self):
-        Follow.objects.create(
-            author = self.author,
-            user=self.user
-        )
-        response_before = self.authorized_client.get(reverse('posts:follow_index'))
-        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.author.username}))
-        response_after = self.authorized_client.get(reverse('posts:follow_index'))
+        response_before = self.authorized_client.get(
+            reverse('posts:follow_index'))
+        self.authorized_client.get(reverse(
+            'posts:profile_follow', kwargs={'username': self.author.username}))
+        response_after = self.authorized_client.get(
+            reverse('posts:follow_index'))
         self.assertNotEqual(response_before.content, response_after.content)
 
+    def test_func_unfollow_works_correct(self):
+        Follow.objects.create(
+            author=self.author,
+            user=self.user
+        )
+        response_before = self.authorized_client.get(
+            reverse('posts:follow_index'))
+        self.authorized_client.get(reverse(
+            'posts:profile_unfollow', kwargs={
+                'username': self.author.username}))
+        response_after = self.authorized_client.get(
+            reverse('posts:follow_index'))
+        self.assertNotEqual(response_before.content, response_after.content)
