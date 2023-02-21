@@ -39,6 +39,7 @@ class StaticURLTests(TestCase):
             f'/posts/{self.post.id}/': self.guest_client,
             '/create/': self.authorized_client,
             f'/posts/{self.post.id}/edit/': self.authorized_author_client,
+            '/follow/': self.authorized_client
         }
         for address, user in users_for_urls.items():
             with self.subTest(address=address):
@@ -53,7 +54,8 @@ class StaticURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
-            '/unexisting_page/': 'core/404.html'
+            '/unexisting_page/': 'core/404.html',
+            '/follow/': 'posts/follow.html'
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
@@ -62,15 +64,15 @@ class StaticURLTests(TestCase):
 
     # Проверяем редиректы для неавторизованного пользователя
     def test_post_create_url_redirect_for_anonymous(self):
-        """Страница /task/ перенаправляет анонимного пользователя."""
         response = self.guest_client.get('/create/')
         self.assertEqual(response.status_code, 302)
 
     def test_post_edit_url_redirect_for_anonymous(self):
-        """Страница /task/test-slug/ перенаправляет анонимного
-        пользователя.
-        """
         response = self.guest_client.get(f'/posts/{self.post.id}/edit/')
+        self.assertEqual(response.status_code, 302)
+    
+    def test_follow_redirect_for_anonymous(self):
+        response = self.guest_client.get('/follow/')
         self.assertEqual(response.status_code, 302)
 
     # Проверяем переход на несуществующую страницу

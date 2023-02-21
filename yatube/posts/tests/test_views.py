@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
-from ..models import Post, Group
+from ..models import Post, Group, Follow
 from django.urls import reverse
 from django import forms
 from django.core.cache import cache
@@ -20,6 +20,7 @@ class Views_Tests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.author = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='user')
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='group_slug',
@@ -40,6 +41,8 @@ class Views_Tests(TestCase):
         self.guest_client = Client()
         self.authorized_author_client = Client()
         self.authorized_author_client.force_login(self.author)
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
     def test_if_views_use_correct_template(self):
         cache.clear()
@@ -247,3 +250,32 @@ class Views_Tests(TestCase):
         response_after_cache_clear = self.guest_client.get(reverse(
             'posts:index'))
         self.assertNotEqual(response_after_cache_clear, response_after)
+
+    def test_follow_page_shows_correct_context(self):
+        Follow.objects.create(
+            author = self.author,
+            user=self.user
+        )
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        page_obj = response.context['page_obj']
+        first_post = page_obj[0]
+        self.assertEqual(first_post.author, self.author)
+        self.assertEqual(first_post.group, self.group)
+        self.assertEqual(first_post.text, self.post.text)
+
+    def test_func_follow_works_correct(self):
+        response_before = self.authorized_client.get(reverse('posts:follow_index'))
+        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.author.username}))
+        response_after = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertNotEqual(response_before.content, response_after.content)
+        
+    def test_func_unfollow_works_correct(self):
+        Follow.objects.create(
+            author = self.author,
+            user=self.user
+        )
+        response_before = self.authorized_client.get(reverse('posts:follow_index'))
+        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.author.username}))
+        response_after = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertNotEqual(response_before.content, response_after.content)
+
